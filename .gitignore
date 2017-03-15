@@ -16,6 +16,16 @@ out/
 # Gradle files
 .gradle/
 build/
+gradle.properties
+**/build/
+
+# Keep only proguard mapping.txt files, for flavor devel and prod, inside build directory
+!app/build/
+app/build/*
+!app/build/outputs/
+app/build/outputs/*
+!app/build/outputs/mapping/
+app/build/outputs/mapping/*
 
 # Local configuration file (sdk path, etc)
 local.properties
@@ -38,3 +48,10 @@ captures/
 
 # Keystore files
 *.jks
+
+# Idea files
+.idea/
+*.iml
+
+# All private and secure files that should not be committed to the repository
+local/
