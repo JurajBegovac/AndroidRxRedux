@@ -131,13 +131,13 @@ public class MainActivity extends RxAppCompatActivity {
         state$
             .map(
                 state -> {
-                  if (state.isCounting()) return state;
-                  else return null;
+                  if (state.isCounting()) return 1;
+                  else return -1;
                 })
             .distinctUntilChanged()
             .switchMap(
-                state -> {
-                  if (state == null) return Observable.empty();
+                flag -> {
+                  if (flag == -1) return Observable.empty();
                   else
                     return Observable.interval(1, TimeUnit.SECONDS)
                         .map(aLong -> CountCommand.create())
