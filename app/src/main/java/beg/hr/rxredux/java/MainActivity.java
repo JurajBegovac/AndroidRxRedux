@@ -3,6 +3,7 @@ package beg.hr.rxredux.java;
 import com.google.auto.value.AutoValue;
 
 import android.os.Bundle;
+import android.os.Parcelable;
 import android.widget.Button;
 import android.widget.TextView;
 
@@ -10,22 +11,23 @@ import com.jakewharton.rxbinding.view.RxView;
 import com.trello.rxlifecycle.android.ActivityEvent;
 import com.trello.rxlifecycle.components.support.RxAppCompatActivity;
 
-import java.util.List;
+import java.util.Collections;
 import java.util.concurrent.TimeUnit;
 
 import beg.hr.rxredux.R;
 import butterknife.BindView;
 import butterknife.ButterKnife;
-import java8.util.stream.Collectors;
-import java8.util.stream.StreamSupport;
+import java8.util.function.Function;
 import rx.Observable;
 import rx.android.schedulers.AndroidSchedulers;
-import rx.subjects.ReplaySubject;
 
 import static beg.hr.rxredux.java.MainActivity.StateType.COUNTING;
 import static beg.hr.rxredux.java.MainActivity.StateType.IDLE;
+import static beg.hr.rxredux.java.MainActivity.StateType.PAUSED;
 
 public class MainActivity extends RxAppCompatActivity {
+
+  private static final String TAG_STATE = "tag_state";
 
   @BindView(R.id.timer)
   TextView timer;
@@ -42,6 +44,8 @@ public class MainActivity extends RxAppCompatActivity {
   @BindView(R.id.resume)
   Button resume;
 
+  private State state;
+
   static State execute(State state, Command command) {
     switch (command.type()) {
       case START:
@@ -53,7 +57,7 @@ public class MainActivity extends RxAppCompatActivity {
         if (state.isCounting()) return state;
         else return state.toBuilder().type(COUNTING).build();
       case PAUSE:
-        return state.toBuilder().type(IDLE).build();
+        return state.toBuilder().type(PAUSED).build();
       case COUNT:
         return state.toBuilder().type(COUNTING).count(state.count() + 1).build();
       default:
@@ -64,6 +68,13 @@ public class MainActivity extends RxAppCompatActivity {
   @Override
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
+
+    if (savedInstanceState != null) {
+      if (savedInstanceState.containsKey(TAG_STATE))
+        state = savedInstanceState.getParcelable(TAG_STATE);
+    }
+    if (state == null) state = State.defaultState();
+
     setContentView(R.layout.activity_main);
     ButterKnife.bind(this);
   }
@@ -72,17 +83,32 @@ public class MainActivity extends RxAppCompatActivity {
   protected void onStart() {
     super.onStart();
 
-    Observable<Command> start$ = RxView.clicks(start).map(aVoid -> StartCommand.create());
-    Observable<Command> stop$ = RxView.clicks(stop).map(aVoid -> StopCommand.create());
-    Observable<Command> pause$ = RxView.clicks(pause).map(aVoid -> PauseCommand.create());
-    Observable<Command> resume$ = RxView.clicks(resume).map(aVoid -> ResumeCommand.create());
+    Observable<Command> userCommands = commands();
 
-    Observable<Command> commands = Observable.merge(start$, stop$, pause$, resume$);
-
-    initialize(commands)
+    initialize(userCommands)
         .compose(bindUntilEvent(ActivityEvent.STOP))
         .observeOn(AndroidSchedulers.mainThread())
+        .doOnNext(this::setState)
         .subscribe(this::render);
+  }
+
+  private void setState(State state) {
+    this.state = state;
+  }
+
+  @Override
+  protected void onSaveInstanceState(Bundle outState) {
+    super.onSaveInstanceState(outState);
+    outState.putParcelable(TAG_STATE, state);
+  }
+
+  private Observable<Command> commands() {
+    Observable<Command> start$ = RxView.clicks(start).share().map(aVoid -> StartCommand.create());
+    Observable<Command> stop$ = RxView.clicks(stop).share().map(aVoid -> StopCommand.create());
+    Observable<Command> pause$ = RxView.clicks(pause).share().map(aVoid -> PauseCommand.create());
+    Observable<Command> resume$ =
+        RxView.clicks(resume).share().map(aVoid -> ResumeCommand.create());
+    return Observable.merge(start$, stop$, pause$, resume$);
   }
 
   private void render(State state) {
@@ -90,53 +116,39 @@ public class MainActivity extends RxAppCompatActivity {
   }
 
   private Observable<State> initialize(Observable<Command> commands) {
-    Observable<Command> countFeedback =
-        Observable.interval(1, TimeUnit.SECONDS).map(aLong -> CountCommand.create());
+    Function<Observable<State>, Observable<Command>> countFeedBack = countFeedBack();
 
-    return commands
-        .mergeWith(countFeedback)
-        .scan(State.defaultState(), MainActivity::execute)
-        .startWith(State.defaultState());
+    return ObservableUtils.reduxWithFeedback(
+        commands,
+        state,
+        MainActivity::execute,
+        AndroidSchedulers.mainThread(),
+        Collections.singletonList(countFeedBack));
   }
 
-  private Observable<Command> countFeedback(Observable<State> state$) {
-    return state$
-        .map(
-            state -> {
-              if (state.isCounting()) return state;
-              else return null;
-            })
-        .distinctUntilChanged()
-        .switchMap(
-            state -> {
-              if (state == null) return Observable.empty();
-              else
-                return Observable.interval(1, TimeUnit.SECONDS).map(aLong -> CountCommand.create());
-            });
-  }
-
-  private Observable<State> reduxWithFeedBack(
-      State initialState, List<Observable<Command>> feedback) {
-    return Observable.defer(
-        () -> {
-          ReplaySubject<State> replaySubject = ReplaySubject.create(1);
-
-          List<Observable<State>> feedbacks =
-              StreamSupport.stream(feedback)
-                  .map(commandObservable -> replaySubject.asObservable())
-                  .collect(Collectors.toList());
-
-          Observable<State> input = Observable.merge(feedbacks);
-
-          //    return input.scan(initialState, MainActivity::execute).startWith(initialState)
-          //        .doOnNext(state -> replaySubject.onNext(state));
-          return null;
-        });
+  private Function<Observable<State>, Observable<Command>> countFeedBack() {
+    return state$ ->
+        state$
+            .map(
+                state -> {
+                  if (state.isCounting()) return state;
+                  else return null;
+                })
+            .distinctUntilChanged()
+            .switchMap(
+                state -> {
+                  if (state == null) return Observable.empty();
+                  else
+                    return Observable.interval(1, TimeUnit.SECONDS)
+                        .map(aLong -> CountCommand.create())
+                        .share();
+                });
   }
 
   enum StateType {
     IDLE,
-    COUNTING
+    COUNTING,
+    PAUSED
   }
 
   private enum CommandType {
@@ -152,7 +164,7 @@ public class MainActivity extends RxAppCompatActivity {
   }
 
   @AutoValue
-  abstract static class State {
+  abstract static class State implements Parcelable {
 
     public static State defaultState() {
       return create(0, IDLE);
