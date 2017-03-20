@@ -1,10 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
+<beg.hr.rxredux.java.TimerView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    tools:context="beg.hr.rxredux.java.MainActivity">
+    android:orientation="vertical">
 
     <TextView
         android:id="@+id/timer"
@@ -38,4 +36,4 @@
         android:layout_height="wrap_content"
         android:text="Resume" />
 
-</LinearLayout>
+</beg.hr.rxredux.java.TimerView>
