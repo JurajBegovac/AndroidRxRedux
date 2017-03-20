@@ -46,7 +46,7 @@ public class MainActivity extends RxAppCompatActivity {
 
   private State state;
 
-  static State execute(State state, Command command) {
+  static State reduce(State state, Command command) {
     switch (command.type()) {
       case START:
         if (state.isCounting()) return state;
@@ -121,7 +121,7 @@ public class MainActivity extends RxAppCompatActivity {
     return ObservableUtils.reduxWithFeedback(
         commands,
         state,
-        MainActivity::execute,
+        MainActivity::reduce,
         AndroidSchedulers.mainThread(),
         Collections.singletonList(countFeedBack));
   }
@@ -151,16 +151,16 @@ public class MainActivity extends RxAppCompatActivity {
     PAUSED
   }
 
-  private enum CommandType {
-    START,
-    STOP,
-    RESUME,
-    PAUSE,
-    COUNT
-  }
-
   interface Command {
-    CommandType type();
+    Type type();
+
+    enum Type {
+      START,
+      STOP,
+      RESUME,
+      PAUSE,
+      COUNT
+    }
   }
 
   @AutoValue
@@ -206,8 +206,8 @@ public class MainActivity extends RxAppCompatActivity {
     }
 
     @Override
-    public CommandType type() {
-      return CommandType.START;
+    public Type type() {
+      return Type.START;
     }
   }
 
@@ -219,8 +219,8 @@ public class MainActivity extends RxAppCompatActivity {
     }
 
     @Override
-    public CommandType type() {
-      return CommandType.STOP;
+    public Type type() {
+      return Type.STOP;
     }
   }
 
@@ -232,8 +232,8 @@ public class MainActivity extends RxAppCompatActivity {
     }
 
     @Override
-    public CommandType type() {
-      return CommandType.RESUME;
+    public Type type() {
+      return Type.RESUME;
     }
   }
 
@@ -245,8 +245,8 @@ public class MainActivity extends RxAppCompatActivity {
     }
 
     @Override
-    public CommandType type() {
-      return CommandType.PAUSE;
+    public Type type() {
+      return Type.PAUSE;
     }
   }
 
@@ -258,8 +258,8 @@ public class MainActivity extends RxAppCompatActivity {
     }
 
     @Override
-    public CommandType type() {
-      return CommandType.COUNT;
+    public Type type() {
+      return Type.COUNT;
     }
   }
 }
