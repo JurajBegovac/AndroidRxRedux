@@ -1,4 +1,4 @@
-package beg.hr.rxredux.java;
+package beg.hr.rxredux.java.redux;
 
 import java.util.List;
 
