@@ -36,4 +36,16 @@
         android:layout_height="wrap_content"
         android:text="Resume" />
 
+    <Button
+        android:id="@+id/loadUser"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Load User" />
+
+    <TextView
+        android:id="@+id/user"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="User" />
+
 </beg.hr.rxredux.java.TimerView>

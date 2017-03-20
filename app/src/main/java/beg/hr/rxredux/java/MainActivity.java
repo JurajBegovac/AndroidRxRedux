@@ -16,7 +16,7 @@ public class MainActivity extends RxAppCompatActivity {
 
     Mvp.Link mvp =
         Mvp.Link.create(
-            new TimerScreen.Presenter(),
+            new TimerScreen.Presenter(new UserService()),
             (TimerView) View.inflate(this, R.layout.activity_main, null),
             this);
     setContentView(mvp.view());

@@ -3,10 +3,11 @@ package beg.hr.rxredux.java;
 import com.google.auto.value.AutoValue;
 
 import android.os.Parcelable;
+import android.support.annotation.Nullable;
 
 import com.jakewharton.rxbinding.view.RxView;
 
-import java.util.Collections;
+import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
 
 import beg.hr.rxredux.java.util.view.ViewPresenter;
@@ -17,7 +18,9 @@ import rx.android.schedulers.AndroidSchedulers;
 
 import static beg.hr.rxredux.java.TimerScreen.StateType.COUNTING;
 import static beg.hr.rxredux.java.TimerScreen.StateType.IDLE;
+import static beg.hr.rxredux.java.TimerScreen.StateType.LOADING_USER;
 import static beg.hr.rxredux.java.TimerScreen.StateType.PAUSED;
+import static beg.hr.rxredux.java.TimerScreen.StateType.USER_LOADED;
 
 /** Created by juraj on 20/03/2017. */
 public class TimerScreen {
@@ -26,10 +29,12 @@ public class TimerScreen {
   enum StateType {
     IDLE,
     COUNTING,
-    PAUSED
+    PAUSED,
+    LOADING_USER,
+    USER_LOADED
   }
 
-  // intents = commands
+  // commands
   interface Command {
     Type type();
 
@@ -38,14 +43,22 @@ public class TimerScreen {
       STOP,
       RESUME,
       PAUSE,
-      COUNT
+      COUNT,
+      LOAD_USER,
+      USER_LOADED
     }
   }
 
   public static class Presenter extends ViewPresenter<TimerView> {
 
+    private final UserService userService;
+
     // todo handle this with android rx lifecycle instead of this subscription
     private Subscription subscription;
+
+    public Presenter(UserService userService) {
+      this.userService = userService;
+    }
 
     @Override
     protected void onLoad() {
@@ -77,6 +90,10 @@ public class TimerScreen {
           return state.toBuilder().type(PAUSED).build();
         case COUNT:
           return state.toBuilder().type(COUNTING).count(state.count() + 1).build();
+        case LOAD_USER:
+          return state.toBuilder().type(LOADING_USER).build();
+        case USER_LOADED:
+          return state.toBuilder().type(USER_LOADED).user(((UserLoaded) command).user()).build();
         default:
           throw new IllegalArgumentException("Wrong command");
       }
@@ -84,13 +101,30 @@ public class TimerScreen {
 
     private Observable<State> initialize(Observable<Command> commands) {
       Function<Observable<State>, Observable<Command>> countFeedBack = countFeedBack();
+      Function<Observable<State>, Observable<Command>> loadUserFeedback = loadUserFeedback();
 
       return ObservableUtils.reduxWithFeedback(
           commands,
-          State.defaultState(),
+          State.builder().count(0).type(LOADING_USER).build(),
           this::reduce,
           AndroidSchedulers.mainThread(),
-          Collections.singletonList(countFeedBack));
+          Arrays.asList(countFeedBack, loadUserFeedback));
+    }
+
+    private Function<Observable<State>, Observable<Command>> loadUserFeedback() {
+      return state$ ->
+          state$
+              .map(
+                  state -> {
+                    if (state.type() == LOADING_USER) return 1;
+                    else return -1;
+                  })
+              .distinctUntilChanged()
+              .switchMap(
+                  flag -> {
+                    if (flag == -1) return Observable.empty();
+                    else return userService.getUser().map(UserLoaded::create).share();
+                  });
     }
 
     private Function<Observable<State>, Observable<Command>> countFeedBack() {
@@ -122,7 +156,9 @@ public class TimerScreen {
           RxView.clicks(view.pause).share().map(aVoid -> PauseCommand.create());
       Observable<Command> resume$ =
           RxView.clicks(view.resume).share().map(aVoid -> ResumeCommand.create());
-      return Observable.merge(start$, stop$, pause$, resume$);
+      Observable<Command> loadUser$ =
+          RxView.clicks(view.loadUser).share().map(aVoid -> LoadUser.create());
+      return Observable.merge(start$, stop$, pause$, resume$, loadUser$);
     }
   }
 
@@ -130,20 +166,19 @@ public class TimerScreen {
   abstract static class State implements Parcelable {
 
     public static State defaultState() {
-      return create(0, IDLE);
+      return builder().count(0).type(IDLE).user(null).build();
     }
 
     public static Builder builder() {
       return new AutoValue_TimerScreen_State.Builder();
     }
 
-    public static State create(int count, StateType type) {
-      return builder().count(count).type(type).build();
-    }
-
     abstract int count();
 
     abstract StateType type();
+
+    @Nullable
+    abstract String user();
 
     public abstract Builder toBuilder();
 
@@ -156,6 +191,8 @@ public class TimerScreen {
       public abstract Builder count(int count);
 
       public abstract Builder type(StateType type);
+
+      public abstract Builder user(String user);
 
       public abstract State build();
     }
@@ -223,6 +260,34 @@ public class TimerScreen {
     @Override
     public Type type() {
       return Type.COUNT;
+    }
+  }
+
+  @AutoValue
+  abstract static class LoadUser implements Command {
+
+    public static LoadUser create() {
+      return new AutoValue_TimerScreen_LoadUser();
+    }
+
+    @Override
+    public Type type() {
+      return Type.LOAD_USER;
+    }
+  }
+
+  @AutoValue
+  abstract static class UserLoaded implements Command {
+
+    public static UserLoaded create(String user) {
+      return new AutoValue_TimerScreen_UserLoaded(user);
+    }
+
+    abstract String user();
+
+    @Override
+    public Type type() {
+      return Type.USER_LOADED;
     }
   }
 }

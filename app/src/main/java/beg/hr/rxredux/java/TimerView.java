@@ -9,6 +9,7 @@ import android.widget.TextView;
 
 import beg.hr.rxredux.R;
 import beg.hr.rxredux.java.TimerScreen.State;
+import beg.hr.rxredux.java.TimerScreen.StateType;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 
@@ -30,6 +31,12 @@ public class TimerView extends LinearLayout {
   @BindView(R.id.resume)
   Button resume;
 
+  @BindView(R.id.loadUser)
+  Button loadUser;
+
+  @BindView(R.id.user)
+  TextView user;
+
   public TimerView(Context context) {
     this(context, null);
   }
@@ -50,5 +57,8 @@ public class TimerView extends LinearLayout {
 
   public void render(State state) {
     timer.setText(String.valueOf(state.count()));
+
+    if (state.type() == StateType.LOADING_USER) user.setText("Loading user");
+    else if (state.type() == StateType.USER_LOADED) user.setText(state.user());
   }
 }
