@@ -1,4 +1,4 @@
-package beg.hr.rxredux.kotlin
+package beg.hr.rxredux.kotlin.util
 
 import rx.Observable
 import rx.Scheduler
@@ -11,7 +11,7 @@ import rx.subjects.ReplaySubject
 
 fun <R, T> Observable<T>.reduxWithFeedback(initState: R,
                                            reducer: (R, T) -> R,
-                                           scheduler: Scheduler = AndroidSchedulers.mainThread(),
+                                           scheduler: Scheduler,
                                            vararg feedback: (Observable<R>) -> Observable<T>): Observable<R> {
     return Observable.defer {
         val replaySubject: ReplaySubject<R> = ReplaySubject.create(1)
