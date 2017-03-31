@@ -1,26 +1,19 @@
-package beg.hr.rxredux.kotlin.timer
+package beg.hr.rxredux.kotlin.dummy
 
 import android.content.Context
 import android.util.AttributeSet
-import android.widget.Button
 import android.widget.LinearLayout
-import android.widget.TextView
-import kotlinx.android.synthetic.main.view_timer.view.*
+import kotlinx.android.synthetic.main.view_dummy.view.*
 
 /**
- * Created by juraj on 24/03/2017.
+ * Created by juraj on 30/03/2017.
  */
-class TimerView : LinearLayout {
+class DummyView : LinearLayout {
   constructor(context: Context?) : this(context, null)
   constructor(context: Context?, attrs: AttributeSet?) : this(context, attrs, 0)
   constructor(context: Context?, attrs: AttributeSet?, defStyleAttr: Int) : super(context,
                                                                                   attrs,
                                                                                   defStyleAttr)
   
-  fun timer(): TextView = timer
-  fun start(): Button = start
-  fun stop(): Button = stop
-  fun resume(): Button = resume
-  fun pause(): Button = pause
-  fun dummy(): Button = dummy
+  fun back() = back
 }

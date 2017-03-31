@@ -36,4 +36,10 @@
         android:layout_height="wrap_content"
         android:text="Resume" />
 
+    <Button
+        android:id="@+id/dummy"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Dummy" />
+
 </beg.hr.rxredux.kotlin.timer.TimerView>
