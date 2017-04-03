@@ -18,6 +18,10 @@ import javax.inject.Inject
  */
 class TimerController(args: Bundle? = null) : RxController(args) {
   
+  companion object {
+    val KEY = "key:timercontroller"
+  }
+  
   @Inject lateinit var flow: Flow
   
   var state: State = State.Idle()
@@ -38,12 +42,12 @@ class TimerController(args: Bundle? = null) : RxController(args) {
   
   override fun onSaveInstanceState(outState: Bundle) {
     super.onSaveInstanceState(outState)
-    outState.putSerializable("KEY", state)
+    outState.putSerializable(KEY, state)
   }
   
   override fun onRestoreInstanceState(savedInstanceState: Bundle) {
     super.onRestoreInstanceState(savedInstanceState)
-    state = savedInstanceState.getSerializable("KEY") as State
+    state = savedInstanceState.getSerializable(KEY) as State
   }
   
   private fun commands(): Observable<Command> {

@@ -4,8 +4,8 @@ import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
 import beg.hr.rxredux.R
 import beg.hr.rxredux.kotlin.MyApp.Companion.appObjectGraph
-import beg.hr.rxredux.kotlin.timer.TimerController
-import beg.hr.rxredux.kotlin.timer.objectGraph
+import beg.hr.rxredux.kotlin.dummy.dummyController
+import beg.hr.rxredux.kotlin.muliti_controllers.ParentController
 import beg.hr.rxredux.kotlin.util.Flow
 import beg.hr.rxredux.kotlin.util.FlowModule
 import beg.hr.rxredux.kotlin.util.FlowObjectGraph
@@ -31,9 +31,9 @@ class MainActivityKotlin : AppCompatActivity(), Flow {
     
     router = Conductor.attachRouter(this, controller_container, savedInstanceState)
     if (!router.hasRootController()) {
-      val initController: TimerController = objectGraph(flowObjectGraph).controller()
-      flowObjectGraph.inject(initController)
-      router.setRoot(RouterTransaction.with(initController))
+      val parentController = ParentController(null)
+      flowObjectGraph.inject(parentController)
+      router.setRoot(RouterTransaction.with(parentController))
     }
   }
   
@@ -52,9 +52,7 @@ class MainActivityKotlin : AppCompatActivity(), Flow {
   }
   
   private fun pushDummy() {
-    val controller = beg.hr.rxredux.kotlin.dummy.objectGraph(flowObjectGraph).controller()
-    flowObjectGraph.inject(controller)
-    router.pushController(RouterTransaction.with(controller).leftRight())
+    router.pushController(RouterTransaction.with(dummyController(flowObjectGraph)).leftRight())
   }
   
 }

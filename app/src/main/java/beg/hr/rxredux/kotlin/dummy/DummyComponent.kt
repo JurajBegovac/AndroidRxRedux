@@ -9,13 +9,19 @@ import dagger.Subcomponent
 /**
  * Created by juraj on 31/03/2017.
  */
-fun objectGraph(flowObjectGraph: FlowObjectGraph) = flowObjectGraph.dummyBuilder().build()
+fun dummyController(flowObjectGraph: FlowObjectGraph): DummyController {
+  val objectGraph = flowObjectGraph.dummyBuilder().build()
+  val dummyController = objectGraph.controller()
+  objectGraph.inject(dummyController)
+  return dummyController
+}
 
 // Object graph
 @PerComponent
 @Subcomponent(modules = arrayOf(DummyModule::class))
 interface DummyObjectGraph {
   
+  fun inject(target: DummyController)
   fun controller(): DummyController
   
   @Subcomponent.Builder

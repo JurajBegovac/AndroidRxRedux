@@ -86,13 +86,19 @@ fun State.Companion.initialize(commands: Observable<Command>, initState: State):
   )
 }
 
-fun objectGraph(flowObjectGraph: FlowObjectGraph) = flowObjectGraph.timerBuilder().build()
+fun timerController(flowObjectGraph: FlowObjectGraph): TimerController {
+  val objectGraph = flowObjectGraph.timerBuilder().build()
+  val timerController = objectGraph.controller()
+  objectGraph.inject(timerController)
+  return timerController
+}
 
 // Object graph
 @PerComponent
 @Subcomponent(modules = arrayOf(TimerModule::class))
 interface TimerObjectGraph {
   
+  fun inject(target: TimerController)
   fun controller(): TimerController
   
   @Subcomponent.Builder
