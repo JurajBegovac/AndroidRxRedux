@@ -5,13 +5,13 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import beg.hr.rxredux.R
-import beg.hr.rxredux.kotlin.util.Flow
+import beg.hr.rxredux.kotlin.MyApp.Companion.appObjectGraph
+import beg.hr.rxredux.kotlin.go
 import com.bluelinelabs.conductor.rxlifecycle.ControllerEvent
 import com.bluelinelabs.conductor.rxlifecycle.RxController
 import com.jakewharton.rxbinding.view.RxView
 import rx.Observable
 import rx.android.schedulers.AndroidSchedulers
-import javax.inject.Inject
 
 /**
  * Created by juraj on 30/03/2017.
@@ -21,8 +21,6 @@ class TimerController(args: Bundle? = null) : RxController(args) {
   companion object {
     val KEY = "key:timercontroller"
   }
-  
-  @Inject lateinit var flow: Flow
   
   var state: State = State.Idle()
   
@@ -35,9 +33,13 @@ class TimerController(args: Bundle? = null) : RxController(args) {
         .compose(bindUntilEvent(ControllerEvent.DETACH))
         .observeOn(AndroidSchedulers.mainThread())
         .subscribe {
-          if (it is State.Navigation) flow.go(it.key)
+          if (it is State.Navigation) appObjectGraph.store().dispatch(go("Dummy"))
           else render(it)
         }
+  }
+  
+  override fun onDetach(view: View) {
+    super.onDetach(view)
   }
   
   override fun onSaveInstanceState(outState: Bundle) {
@@ -63,6 +65,7 @@ class TimerController(args: Bundle? = null) : RxController(args) {
   }
   
   private fun render(state: State) {
+    if (!isAttached || isDestroyed || isBeingDestroyed) return
     this.state = state
     val timerView = view as TimerView
     when (state) {

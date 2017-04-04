@@ -2,6 +2,8 @@ package beg.hr.kotlindesarrolladorandroid.common.dagger2
 
 import android.app.Activity
 import android.content.Context
+import beg.hr.rxredux.kotlin.dummy.DummyObjectGraph
+import beg.hr.rxredux.kotlin.timer.TimerObjectGraph
 import dagger.Module
 import dagger.Provides
 import dagger.Subcomponent
@@ -14,6 +16,12 @@ import dagger.Subcomponent
 @Subcomponent(modules = arrayOf(ActivityModule::class))
 interface ActivityObjectGraph {
   
+  // timer
+  fun timerBuilder(): TimerObjectGraph.Builder
+  
+  // dummy
+  fun dummyBuilder(): DummyObjectGraph.Builder
+  
   @Subcomponent.Builder
   interface Builder {
     fun module(module: ActivityModule): Builder
@@ -21,7 +29,7 @@ interface ActivityObjectGraph {
   }
 }
 
-@Module
+@Module(subcomponents = arrayOf(TimerObjectGraph::class, DummyObjectGraph::class))
 open class ActivityModule(val activity: Activity) {
   
   @Provides

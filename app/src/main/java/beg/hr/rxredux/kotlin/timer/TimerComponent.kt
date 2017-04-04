@@ -1,9 +1,9 @@
 package beg.hr.rxredux.kotlin.timer
 
+import beg.hr.kotlindesarrolladorandroid.common.dagger2.ActivityObjectGraph
 import beg.hr.kotlindesarrolladorandroid.common.dagger2.PerComponent
 import beg.hr.rxredux.kotlin.MyApp.Companion.appObjectGraph
 import beg.hr.rxredux.kotlin.timer.State.*
-import beg.hr.rxredux.kotlin.util.FlowObjectGraph
 import beg.hr.rxredux.kotlin.util.reduxWithFeedback
 import dagger.Module
 import dagger.Provides
@@ -86,19 +86,14 @@ fun State.Companion.initialize(commands: Observable<Command>, initState: State):
   )
 }
 
-fun timerController(flowObjectGraph: FlowObjectGraph): TimerController {
-  val objectGraph = flowObjectGraph.timerBuilder().build()
-  val timerController = objectGraph.controller()
-  objectGraph.inject(timerController)
-  return timerController
-}
+fun timerController(activityObjectGraph: ActivityObjectGraph): TimerController =
+    activityObjectGraph.timerBuilder().build().controller()
 
 // Object graph
 @PerComponent
 @Subcomponent(modules = arrayOf(TimerModule::class))
 interface TimerObjectGraph {
   
-  fun inject(target: TimerController)
   fun controller(): TimerController
   
   @Subcomponent.Builder
