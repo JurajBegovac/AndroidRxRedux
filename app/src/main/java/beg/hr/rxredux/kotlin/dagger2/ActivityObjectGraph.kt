@@ -3,6 +3,7 @@ package beg.hr.kotlindesarrolladorandroid.common.dagger2
 import android.app.Activity
 import android.content.Context
 import beg.hr.rxredux.kotlin.dummy.DummyObjectGraph
+import beg.hr.rxredux.kotlin.muliti_controllers.ParentController
 import beg.hr.rxredux.kotlin.timer.TimerObjectGraph
 import dagger.Module
 import dagger.Provides
@@ -21,6 +22,8 @@ interface ActivityObjectGraph {
   
   // dummy
   fun dummyBuilder(): DummyObjectGraph.Builder
+  
+  fun inject(target: ParentController)
   
   @Subcomponent.Builder
   interface Builder {

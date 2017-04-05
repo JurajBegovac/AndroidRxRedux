@@ -8,6 +8,7 @@ import beg.hr.rxredux.kotlin.MyApp.Companion.appObjectGraph
 import beg.hr.rxredux.kotlin.dummy.dummyController
 import beg.hr.rxredux.kotlin.muliti_controllers.ParentController
 import beg.hr.rxredux.kotlin.timer.timerController
+import beg.hr.rxredux.kotlin.util.leftRight
 import com.bluelinelabs.conductor.Conductor
 import com.bluelinelabs.conductor.Router
 import com.bluelinelabs.conductor.RouterTransaction
@@ -37,8 +38,6 @@ class MainActivityKotlin : RxAppCompatActivity() {
         getRouterTransaction(it.navigationKey)
       }, null)
     
-    if (!router.hasRootController()) router.setRoot(getRouterTransaction(appObjectGraph.store().getState().navigation.last().navigationKey))
-    
     appObjectGraph.store()
         .observeNavigation()
         .compose(bindUntilEvent(ActivityEvent.DESTROY))
@@ -55,18 +54,16 @@ class MainActivityKotlin : RxAppCompatActivity() {
           } else {
             router.pushController(getRouterTransaction(navigationKey))
           }
-          //          if (it.direction == Direction.FORWARD) {
-          //            router.pushController(RouterTransaction.with(getController(navigationKey)))
-          //          } else {
-          //            if (!router.handleBack()) super.onBackPressed()
-          //          }
         }
   }
   
   private fun getRouterTransaction(navigationKey: String): RouterTransaction {
-    if (navigationKey == "Parent") return RouterTransaction.with(ParentController(null)).tag(
-        navigationKey)
-    else if (navigationKey == "Dummy") return RouterTransaction.with(dummyController(objectGraph)).tag(
+    if (navigationKey == "Parent") {
+      val parentController = ParentController(null)
+      objectGraph.inject(parentController)
+      return RouterTransaction.with(parentController).tag(
+          navigationKey)
+    } else if (navigationKey == "Dummy") return RouterTransaction.with(dummyController(objectGraph)).leftRight().tag(
         navigationKey)
     else if (navigationKey == "Timer") return RouterTransaction.with(timerController(objectGraph)).tag(
         navigationKey)

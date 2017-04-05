@@ -65,7 +65,6 @@ class TimerController(args: Bundle? = null) : RxController(args) {
   }
   
   private fun render(state: State) {
-    if (!isAttached || isDestroyed || isBeingDestroyed) return
     this.state = state
     val timerView = view as TimerView
     when (state) {
