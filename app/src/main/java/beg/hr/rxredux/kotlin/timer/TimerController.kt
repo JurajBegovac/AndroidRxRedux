@@ -5,13 +5,15 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import beg.hr.rxredux.R
-import beg.hr.rxredux.kotlin.MyApp.Companion.appObjectGraph
+import beg.hr.rxredux.kotlin.Store
 import beg.hr.rxredux.kotlin.go
+import beg.hr.rxredux.kotlin.util.BaseConductorActivity
 import com.bluelinelabs.conductor.rxlifecycle.ControllerEvent
 import com.bluelinelabs.conductor.rxlifecycle.RxController
 import com.jakewharton.rxbinding.view.RxView
 import rx.Observable
 import rx.android.schedulers.AndroidSchedulers
+import javax.inject.Inject
 
 /**
  * Created by juraj on 30/03/2017.
@@ -21,6 +23,8 @@ class TimerController(args: Bundle? = null) : RxController(args) {
   companion object {
     val KEY = "key:timercontroller"
   }
+  
+  @Inject lateinit var store: Store
   
   var state: State = State.Idle()
   
@@ -33,8 +37,10 @@ class TimerController(args: Bundle? = null) : RxController(args) {
         .compose(bindUntilEvent(ControllerEvent.DETACH))
         .observeOn(AndroidSchedulers.mainThread())
         .subscribe {
-          if (it is State.Navigation) appObjectGraph.store().dispatch(go("Dummy"))
-          else render(it)
+          if (it is State.Navigation) {
+            val baseConductorActivity = activity as BaseConductorActivity
+            baseConductorActivity.objectGraph.store().dispatch(go("Dummy"))
+          } else render(it)
         }
   }
   

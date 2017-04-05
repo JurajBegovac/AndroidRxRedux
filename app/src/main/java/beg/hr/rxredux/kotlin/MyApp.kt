@@ -17,7 +17,7 @@ class MyApp : Application() {
   override fun onCreate() {
     super.onCreate()
     appObjectGraph = DaggerAppObjectGraph.builder()
-        .appModule(AppModule(this, initialState))
+        .appModule(AppModule(this))
         .build()
   }
 }

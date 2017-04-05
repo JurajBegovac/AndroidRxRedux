@@ -9,8 +9,12 @@ import dagger.Subcomponent
 /**
  * Created by juraj on 31/03/2017.
  */
-fun dummyController(activityObjectGraph: ActivityObjectGraph): DummyController =
-    activityObjectGraph.dummyBuilder().build().controller()
+fun dummyController(activityObjectGraph: ActivityObjectGraph): DummyController {
+  val graph = activityObjectGraph.dummyBuilder().build()
+  val controller = graph.controller()
+  graph.inject(controller)
+  return controller
+}
 
 // Object graph
 @PerComponent
@@ -18,6 +22,7 @@ fun dummyController(activityObjectGraph: ActivityObjectGraph): DummyController =
 interface DummyObjectGraph {
   
   fun controller(): DummyController
+  fun inject(controller: DummyController)
   
   @Subcomponent.Builder
   interface Builder {

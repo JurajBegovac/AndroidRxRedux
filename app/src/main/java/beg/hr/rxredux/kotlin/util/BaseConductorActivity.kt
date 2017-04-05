@@ -21,7 +21,7 @@ import rx.android.schedulers.AndroidSchedulers
 abstract class BaseConductorActivity : RxAppCompatActivity() {
   
   lateinit protected var router: Router
-  lateinit protected var objectGraph: ActivityObjectGraph
+  lateinit  var objectGraph: ActivityObjectGraph
   
   abstract fun getRouterTransaction(navigationKey: String): RouterTransaction
   
@@ -33,10 +33,12 @@ abstract class BaseConductorActivity : RxAppCompatActivity() {
         .build()
     
     setContentView(R.layout.root)
+  
+    val store = objectGraph.store()
     
     router = Conductor.attachRouter(this, controller_container, savedInstanceState)
     
-    Observable.combineLatest(Observable.just(savedInstanceState), appObjectGraph.store()
+    Observable.combineLatest(Observable.just(savedInstanceState), store
         .observeNavigation(), { t1, t2 -> Pair.create(t1, t2) })
         .compose(bindUntilEvent(ActivityEvent.DESTROY))
         .observeOn(AndroidSchedulers.mainThread())
@@ -59,11 +61,11 @@ abstract class BaseConductorActivity : RxAppCompatActivity() {
   }
   
   override fun onBackPressed() {
-    appObjectGraph.store().dispatch(goBack())
+    objectGraph.store().dispatch(goBack())
   }
   
   override fun onDestroy() {
-    val store = appObjectGraph.store()
+    val store = objectGraph.store()
     store.dispatch(replace(store.getState().navigation.navigationKeys))
     super.onDestroy()
   }

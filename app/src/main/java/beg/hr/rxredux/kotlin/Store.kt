@@ -1,11 +1,11 @@
 package beg.hr.rxredux.kotlin
 
+import beg.hr.kotlindesarrolladorandroid.common.dagger2.PerActivity
 import beg.hr.rxredux.kotlin.util.reduxWithFeedback
 import rx.Observable
 import rx.schedulers.Schedulers
 import rx.subjects.BehaviorSubject
 import rx.subjects.PublishSubject
-import javax.inject.Singleton
 
 /**
  * Created by juraj on 04/04/2017.
@@ -81,7 +81,7 @@ fun replace(navigationKeys: List<String>): Action =
 /**
  * Store
  */
-@Singleton
+@PerActivity
 class Store(initState: State) {
   
   private val stateObservable: BehaviorSubject<State> = BehaviorSubject.create(initState)

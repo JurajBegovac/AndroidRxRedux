@@ -2,7 +2,9 @@ package beg.hr.kotlindesarrolladorandroid.common.dagger2
 
 import android.app.Activity
 import android.content.Context
+import beg.hr.rxredux.kotlin.Store
 import beg.hr.rxredux.kotlin.dummy.DummyObjectGraph
+import beg.hr.rxredux.kotlin.initialState
 import beg.hr.rxredux.kotlin.muliti_controllers.ParentController
 import beg.hr.rxredux.kotlin.timer.TimerObjectGraph
 import dagger.Module
@@ -22,6 +24,8 @@ interface ActivityObjectGraph {
   
   // dummy
   fun dummyBuilder(): DummyObjectGraph.Builder
+  
+  fun store(): Store
   
   fun inject(target: ParentController)
   
@@ -43,5 +47,9 @@ open class ActivityModule(val activity: Activity) {
   @PerActivity
   @ActivityContext
   fun context(): Context = activity
+  
+  @Provides
+  @PerActivity
+  fun store(): Store = Store(initialState)
   
 }

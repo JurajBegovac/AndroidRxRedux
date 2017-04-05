@@ -86,8 +86,12 @@ fun State.Companion.initialize(commands: Observable<Command>, initState: State):
   )
 }
 
-fun timerController(activityObjectGraph: ActivityObjectGraph): TimerController =
-    activityObjectGraph.timerBuilder().build().controller()
+fun timerController(activityObjectGraph: ActivityObjectGraph): TimerController {
+  val graph = activityObjectGraph.timerBuilder().build()
+  val controller = graph.controller()
+  graph.inject(controller)
+  return controller
+}
 
 // Object graph
 @PerComponent
@@ -95,6 +99,7 @@ fun timerController(activityObjectGraph: ActivityObjectGraph): TimerController =
 interface TimerObjectGraph {
   
   fun controller(): TimerController
+  fun inject(controller: TimerController)
   
   @Subcomponent.Builder
   interface Builder {
