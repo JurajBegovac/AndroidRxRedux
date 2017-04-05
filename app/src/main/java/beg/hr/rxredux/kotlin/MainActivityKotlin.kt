@@ -55,7 +55,7 @@ class MainActivityKotlin : AppCompatActivity(), Flow {
   }
   
   override fun onBackPressed() {
-    if (!router.handleBack()) super.onBackPressed()
+    if (!router.handleBack()) finish()
   }
   
   override fun go(key: String) {
