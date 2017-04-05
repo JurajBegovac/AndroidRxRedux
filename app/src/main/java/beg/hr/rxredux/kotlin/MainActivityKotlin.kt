@@ -31,10 +31,27 @@ class MainActivityKotlin : AppCompatActivity(), Flow {
     
     router = Conductor.attachRouter(this, controller_container, savedInstanceState)
     if (!router.hasRootController()) {
-      val parentController = ParentController(null)
-      flowObjectGraph.inject(parentController)
-      router.setRoot(RouterTransaction.with(parentController))
+      router.setRoot(getRouterTransaction(initKey()))
     }
+  }
+  
+  private fun initKey(): String {
+    return "Parent"
+  }
+  
+  private fun getRouterTransaction(key: String): RouterTransaction {
+    when (key) {
+      "Parent" -> {
+        val parentController = ParentController(null)
+        flowObjectGraph.inject(parentController)
+        return RouterTransaction.with(parentController)
+      }
+      "Dummy" -> {
+        return RouterTransaction.with(dummyController(flowObjectGraph)).leftRight()
+      }
+      else -> throw IllegalArgumentException("Don't know how to handle key: $key")
+    }
+    
   }
   
   override fun onBackPressed() {
@@ -42,17 +59,14 @@ class MainActivityKotlin : AppCompatActivity(), Flow {
   }
   
   override fun go(key: String) {
-    when (key) {
-      "Dummy" -> pushDummy()
-    }
+    router.pushController(getRouterTransaction(key))
   }
   
   override fun goBack() {
     onBackPressed()
   }
   
-  private fun pushDummy() {
-    router.pushController(RouterTransaction.with(dummyController(flowObjectGraph)).leftRight())
+  override fun replace(keys: List<String>) {
+    router.setBackstack(keys.map { getRouterTransaction(it) }, null)
   }
-  
 }

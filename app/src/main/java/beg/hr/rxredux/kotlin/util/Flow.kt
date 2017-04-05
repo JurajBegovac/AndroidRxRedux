@@ -6,4 +6,5 @@ package beg.hr.rxredux.kotlin.util
 interface Flow {
   fun go(key: String)
   fun goBack()
+  fun replace(keys: List<String>)
 }
