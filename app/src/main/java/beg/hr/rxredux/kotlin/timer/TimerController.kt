@@ -5,6 +5,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import beg.hr.rxredux.R
+import beg.hr.rxredux.kotlin.util.BaseConductorActivity
 import beg.hr.rxredux.kotlin.util.Flow
 import com.bluelinelabs.conductor.rxlifecycle.ControllerEvent
 import com.bluelinelabs.conductor.rxlifecycle.RxController
@@ -26,8 +27,10 @@ class TimerController(args: Bundle? = null) : RxController(args) {
   
   var state: State = State.Idle()
   
-  override fun onCreateView(inflater: LayoutInflater, container: ViewGroup): View =
-      inflater.inflate(R.layout.view_timer, container, false)
+  override fun onCreateView(inflater: LayoutInflater, container: ViewGroup): View {
+    (activity as BaseConductorActivity).flowObjectGraph.inject(this)
+    return inflater.inflate(R.layout.view_timer, container, false)
+  }
   
   override fun onAttach(view: View) {
     super.onAttach(view)
