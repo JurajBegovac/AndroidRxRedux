@@ -1,5 +1,6 @@
 package beg.hr.rxredux.kotlin.timer
 
+import android.util.Log
 import beg.hr.rxredux.kotlin.MyApp.Companion.appObjectGraph
 import beg.hr.rxredux.kotlin.timer.State.*
 import beg.hr.rxredux.kotlin.util.reduxWithFeedback
@@ -28,57 +29,49 @@ sealed class Command {
   class Navigation(val key: String) : Command()
 }
 
-// reducer
-fun State.Companion.reduce(state: State, command: Command): State {
-  when (command) {
-    is Command.Start -> if (state is Counting) {
-      return state
-    } else return Counting(0)
-    is Command.Stop -> return Idle()
-    is Command.Resume -> if (state is Counting) return state else if (state is Paused) return Counting(
-        state.count) else return Counting(0)
-    is Command.Pause -> if (state is Counting) return Paused(state.count) else return state
-    is Command.Count -> if (state is Counting) return Counting(state.count + 1) else throw IllegalArgumentException(
-        "Here should only be counting")
-    is Command.Navigation -> return Navigation(command.key)
-    else -> throw IllegalArgumentException("Wrong command")
-  }
-}
-
-fun State.isCounting(): Unit? = if (this is Counting) Unit else null
-
-fun State.isIdle(): Unit? = if (this is Idle) Unit else null
+fun State.Companion.reduce(state: State, command: Command): State =
+    when (command) {
+      is Command.Start -> state as? Counting ?: Counting(0)
+      is Command.Stop -> Idle()
+      is Command.Resume -> state as? Counting ?: if (state is Paused) Counting(
+          state.count) else Counting(0)
+      is Command.Pause -> if (state is Counting) Paused(state.count) else state
+      is Command.Count -> if (state is Counting) Counting(state.count + 1) else
+        throw IllegalArgumentException("Here should only be counting")
+      is Command.Navigation -> Navigation(command.key)
+    }
 
 fun State.Companion.initialize(commands: Observable<Command>, initState: State): Observable<State> {
   val countFeedBack: (Observable<State>) -> Observable<Command> = {
-    it.map(State::isCounting)
+    it.map { it is Counting }
         .distinctUntilChanged()
         .switchMap {
-          if (it == null)
-            Observable.empty()
-          else
+          Log.i("Juraj", it.toString())
+          if (it)
             Observable.interval(1, TimeUnit.SECONDS)
                 .map { Command.Count() }
                 .share()
+          else
+            Observable.empty()
         }
   }
   
   val autoStartFeedback: (Observable<State>) -> Observable<Command> = {
-    it.map(State::isIdle)
+    it.map { it is Idle }
         .distinctUntilChanged()
         .switchMap {
-          if (it == null) Observable.empty()
-          else
+          if (it)
             appObjectGraph.timerService().autoStart().map { Command.Start() }.share()
+          else
+            Observable.empty()
         }
   }
   
-  return commands.reduxWithFeedback(
-      initState,
-      this::reduce,
-      AndroidSchedulers.mainThread(),
-      countFeedBack, autoStartFeedback
-  )
+  return commands.reduxWithFeedback(initState,
+                                    this::reduce,
+                                    AndroidSchedulers.mainThread(),
+                                    countFeedBack,
+                                    autoStartFeedback)
 }
 
 fun timerController() = TimerController(null)
