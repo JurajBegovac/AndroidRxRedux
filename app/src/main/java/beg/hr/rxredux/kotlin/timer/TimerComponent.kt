@@ -3,7 +3,7 @@ package beg.hr.rxredux.kotlin.timer
 import android.util.Log
 import beg.hr.rxredux.kotlin.MyApp.Companion.appObjectGraph
 import beg.hr.rxredux.kotlin.timer.State.*
-import beg.hr.rxredux.kotlin.util.Observables
+import beg.hr.rxredux.kotlin.util.system
 import rx.Observable
 import rx.android.schedulers.AndroidSchedulers
 import java.io.Serializable
@@ -68,12 +68,12 @@ fun State.Companion.initialize(commands: Observable<Command>,
         }
   }
   
-  return Observables.system(initState,
-                            { state, command -> State.reduce(state, command) },
-                            AndroidSchedulers.mainThread(),
-                            { commands },
-                            countFeedBack,
-                            autoStartFeedback)
+  return system(initState,
+                { state, command -> State.reduce(state, command) },
+                AndroidSchedulers.mainThread(),
+                { commands },
+                countFeedBack,
+                autoStartFeedback)
 }
 
 fun timerController() = TimerController(null)
