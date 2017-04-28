@@ -3,7 +3,7 @@ package beg.hr.rxredux.kotlin.timer
 import android.util.Log
 import beg.hr.rxredux.kotlin.MyApp.Companion.appObjectGraph
 import beg.hr.rxredux.kotlin.timer.State.*
-import beg.hr.rxredux.kotlin.util.reduxWithFeedback
+import beg.hr.rxredux.kotlin.util.Observables
 import rx.Observable
 import rx.android.schedulers.AndroidSchedulers
 import java.io.Serializable
@@ -41,7 +41,8 @@ fun State.Companion.reduce(state: State, command: Command): State =
       is Command.Navigation -> Navigation(command.key)
     }
 
-fun State.Companion.initialize(commands: Observable<Command>, initState: State): Observable<State> {
+fun State.Companion.initialize(commands: Observable<Command>,
+                               initState: State): Observable<State> {
   val countFeedBack: (Observable<State>) -> Observable<Command> = {
     it.map { it is Counting }
         .distinctUntilChanged()
@@ -67,11 +68,12 @@ fun State.Companion.initialize(commands: Observable<Command>, initState: State):
         }
   }
   
-  return commands.reduxWithFeedback(initState,
-                                    this::reduce,
-                                    AndroidSchedulers.mainThread(),
-                                    countFeedBack,
-                                    autoStartFeedback)
+  return Observables.system(initState,
+                            { state, command -> State.reduce(state, command) },
+                            AndroidSchedulers.mainThread(),
+                            { commands },
+                            countFeedBack,
+                            autoStartFeedback)
 }
 
 fun timerController() = TimerController(null)
